@@ -5,7 +5,9 @@ export const getListingWithFilter = async (req, res) => {
     try {
         const { city, state, country, guests, minPrice, maxPrice, dateFrom, dateTo } = req.query;
 
-        const where = {};
+        const where = {
+            status: "APPROVED"
+        };
 
         if (city) where.city = { equals: city, mode: 'insensitive' };
         if (state) where.state = { equals: state, mode: 'insensitive' };
@@ -72,7 +74,8 @@ export const getListingDetails = async (req, res) => {
         const { listingId } = req.params
         const listing = await prisma.listing.findUnique({
             where: {
-                id: listingId
+                id: listingId,
+                status: "APPROVED"
             },
             select: {
                 title: true,
@@ -203,24 +206,6 @@ export const updateListing = async (req, res) => {
     }
 }
 
-export const deleteListing = async (req, res) => {
-    try {
-        const { listingId } = req.params
-        const lisitngs = await prisma.listing.delete({
-            where: {
-                id: listingId
-            }
-        })
-        res.status(200).json({
-            message: "Listing deleted successfully"
-        })
-    } catch (error) {
-        res.status(500).json({
-            message: 'Failed to create listing',
-            error
-        });
-    }
-}
 
 export const sortListing = async (req, res) => {
     const { sort } = req.query
@@ -238,6 +223,9 @@ export const sortListing = async (req, res) => {
     }
     const listings = await prisma.listing.findMany({
         orderBy,
+        where: {
+            status: "APPROVED"
+        },
         include: {
             host: {
                 select: {

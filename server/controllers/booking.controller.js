@@ -25,12 +25,13 @@ export const getAllBookingsByUser = async (req, res) => {
     }
 }
 
-export const getBookingDetails = async (req, res) => {
+export const getBookingDetailsForUser = async (req, res) => {
     try {
         const { bookingId } = req.params
         const booking = await prisma.booking.findUnique({
             where: {
-                id: bookingId
+                id: bookingId,
+                userId: req.user.id
             },
             select: {
                 dateFrom: true,
@@ -121,13 +122,14 @@ export const createBooking = async (req, res) => {
     }
 }
 
-export const updateBooking = async (req, res) => {
+export const updateBookingByUser = async (req, res) => {
     try {
         const { dateFrom, dateTo, guests } = req.body;
         const { bookingId } = req.params
         const booking = await prisma.booking.update({
             where: {
-                id: bookingId
+                id: bookingId,
+                userId: req.user.id
             },
             data: {
                 dateFrom: dateFrom,
@@ -159,12 +161,13 @@ export const updateBooking = async (req, res) => {
 
 }
 
-export const deleteBooking = async (req, res) => {
+export const deleteBookingByUser = async (req, res) => {
     try {
         const { bookingId } = req.params
         const booking = await prisma.booking.findUnique({
             where: {
-                id: bookingId
+                id: bookingId,
+                userId: req.user.id
             }
         })
         if (!booking) {

@@ -14,12 +14,19 @@ model User {
   password  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-
+  role        UserRole  @default(user)
+  isBan     Boolean  @default(false)
+  banReason   String?
+  banUntil    DateTime?
+  reports      Report[]
   listings  Listing[]
   bookings  Booking[]
   favorites Favorite[]
 }
-
+enum UserRole{
+  user
+  admin
+}
 model Listing {
   id          String    @id @default(uuid())
   title       String
@@ -34,11 +41,17 @@ model Listing {
   longitude   Float?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
-
   host        User       @relation(fields: [hostId], references: [id])
   hostId      String
   bookings    Booking[]
   favoritedBy    Favorite[]
+  status    ListingStatus   @default(PENDING)
+  reports  Report[]
+}
+enum ListingStatus{
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Booking {
@@ -64,4 +77,14 @@ model Favorite{
   listing     Listing     @relation(fields: [listingId],references: [id])
   createdAt   DateTime    @default(now())
   @@unique([userId,listingId])
+}
+
+model Report{
+  id      String    @id  @default(uuid())
+  user    User        @relation(fields: [userId],references: [id])
+  userId  String
+  listing   Listing    @relation(fields: [listingId], references: [id])
+  listingId String
+  reason    String
+  createdAt DateTime  @default(now())
 }
