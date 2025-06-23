@@ -1,5 +1,5 @@
 import prisma from "../lib/prisma.js"
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 
 export const getStats = async (req, res) => {
     try {
@@ -39,18 +39,14 @@ export const dashboard = async (req, res) => {
         const newUsersThisMonth = await prisma.user.count({
             where: {
                 createdAt: {
-                    gte: {
-                        startDate
-                    }
+                    gte: startDate
                 }
             }
         })
         const newListingThisMonth = await prisma.listing.count({
             where: {
                 createdAt: {
-                    gte: {
-                        startDate
-                    }
+                    gte: startDate
                 }
             }
         })
@@ -111,6 +107,8 @@ export const dashboard = async (req, res) => {
             averageGuestsPerBooking
         })
     } catch (error) {
+        console.log(error);
+
         res.status(500).json({
             message: "Internal error occured",
             error
@@ -120,8 +118,25 @@ export const dashboard = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
-
+        const users = await prisma.user.findMany({
+            where: {
+                role: "user"
+            },
+            include: {
+                bookings: {
+                    include: {
+                        listing: true
+                    }
+                }
+            }
+        })
+        res.status(200).json({
+            message: "Users fetched",
+            data: users
+        })
     } catch (error) {
+        console.log(error);
+
         res.status(500).json({
             message: "Internal error occured",
             error
@@ -194,7 +209,12 @@ export const deleteUser = async (req, res) => {
 
 export const getAllListingForAdmin = async (req, res) => {
     try {
-        const listing = await prisma.listing.findMany({})
+        const listing = await prisma.listing.findMany({
+            include: {
+                bookings: true,
+                host: true
+            }
+        })
         return res.status(200).json({
             message: "Listings found",
             listing
@@ -272,10 +292,10 @@ export const getListingWithFilterForAdmin = async (req, res) => {
 };
 
 
-export const deleteListing = async (req, res) => {
+export const deleteListingByAdmin = async (req, res) => {
     try {
         const { listingId } = req.params
-        const lisitngs = await prisma.listing.delete({
+        const listings = await prisma.listing.delete({
             where: {
                 id: listingId
             }
@@ -310,7 +330,12 @@ export const updateStatusOfListing = async (req, res) => {
 
 export const getAllBookings = async (req, res) => {
     try {
-        const booking = await prisma.booking.findMany()
+        const booking = await prisma.booking.findMany({
+            include: {
+                listing: true,
+                user: true
+            }
+        })
         res.status(200).json({
             message: "All bookings fetched",
             booking

@@ -18,6 +18,8 @@ model User {
   isBan     Boolean  @default(false)
   banReason   String?
   banUntil    DateTime?
+  avatar      String?
+  location    String?
   reports      Report[]
   listings  Listing[]
   bookings  Booking[]
@@ -45,6 +47,8 @@ model Listing {
   hostId      String
   bookings    Booking[]
   favoritedBy    Favorite[]
+  amenities   String[] 
+  rules       String[] 
   status    ListingStatus   @default(PENDING)
   reports  Report[]
 }
@@ -74,7 +78,7 @@ model Favorite{
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   listingId   String    
-  listing     Listing     @relation(fields: [listingId],references: [id])
+  listing     Listing     @relation(fields: [listingId],references: [id],onDelete:Cascade)
   createdAt   DateTime    @default(now())
   @@unique([userId,listingId])
 }

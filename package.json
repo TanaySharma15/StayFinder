@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "express-rate-limit": "^7.5.0",
+    "morgan": "^1.10.0",
+    "nodemailer": "^7.0.3"
+  },
+  "devDependencies": {
+    "@ljharb/tsconfig": "^0.3.2"
+  }
+}

@@ -1,11 +1,24 @@
+import { sendBookingConfirmationEMail } from "../lib/mailer.js"
 import prisma from "../lib/prisma.js"
 
 export const getAllBookingsByUser = async (req, res) => {
     try {
-        const { userId } = req.query
         const booking = await prisma.booking.findMany({
             where: {
-                userId: userId
+                userId: req.user.id
+            },
+            include: {
+                listing: {
+                    select: {
+                        id: true,
+                        imageUrls: true,
+                        title: true,
+                        status: true,
+                        price: true,
+                        city: true,
+                        country: true
+                    }
+                }
             }
         })
         if (!booking || booking.length === 0) {
@@ -71,8 +84,8 @@ export const getBookingDetailsForUser = async (req, res) => {
 
 export const createBooking = async (req, res) => {
     try {
-        const { userId, dateFrom, dateTo, guests } = req.body
-        const listingId = req.params
+        const { dateFrom, dateTo, guests } = req.body
+        const { listingId } = req.params
         const existing = await prisma.booking.findFirst({
             where: {
                 listingId,
@@ -95,7 +108,7 @@ export const createBooking = async (req, res) => {
             data: {
                 user: {
                     connect: {
-                        id: userId
+                        id: req.user.id
                     }
                 },
                 listing: {
@@ -110,11 +123,33 @@ export const createBooking = async (req, res) => {
                 cancellation: new Date(Date.now() + 48 * 60 * 60 * 1000)
             }
         })
+        const user = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        })
+        const listing = await prisma.listing.findUnique({
+            where: {
+                id: listingId
+            }
+        })
+        // await sendBookingConfirmationEMail(user.email, {
+        //     listingName: listing.title,
+        //     startDate: booking.dateFrom,
+        //     endDate: booking.dateTo
+        // })
+        if (!listing) {
+            return res.status(500).json({
+                message: "Listing not created"
+            })
+        }
         res.status(200).json({
             message: "Booking created",
             data: booking
         })
     } catch (error) {
+        console.log(error);
+
         res.status(500).json({
             message: "Internal error occured",
             error

@@ -6,7 +6,7 @@ export const getListingWithFilter = async (req, res) => {
         const { city, state, country, guests, minPrice, maxPrice, dateFrom, dateTo } = req.query;
 
         const where = {
-            status: "APPROVED"
+            // status: "PENDING"
         };
 
         if (city) where.city = { equals: city, mode: 'insensitive' };
@@ -49,16 +49,10 @@ export const getListingWithFilter = async (req, res) => {
             include: {
                 host: {
                     select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
-                },
-                bookings: true,
-            },
-            orderBy: {
-                createdAt: 'desc',
-            },
+                        name: true
+                    }
+                }
+            }
         });
 
         res.status(200).json(listings);
@@ -75,7 +69,7 @@ export const getListingDetails = async (req, res) => {
         const listing = await prisma.listing.findUnique({
             where: {
                 id: listingId,
-                status: "APPROVED"
+                // status: "APPROVED"
             },
             select: {
                 title: true,
@@ -88,6 +82,8 @@ export const getListingDetails = async (req, res) => {
                 imageUrls: true,
                 latitude: true,
                 longitude: true,
+                rules: true,
+                amenities: true,
                 host: {
                     select: {
                         name: true,
@@ -246,4 +242,65 @@ export const sortListing = async (req, res) => {
         message: "Listing found",
         listings
     })
+}
+
+export const trendingListings = async (req, res) => {
+    try {
+        const trending = await prisma.listing.findMany({
+            orderBy: {
+                favoritedBy: {
+                    _count: "desc"
+                }
+            },
+            take: 4,
+            select: {
+                id: true,
+                country: true,
+                title: true,
+                imageUrls: true,
+                price: true
+            }
+        })
+        res.status(200).json({
+            message: "Trending destination",
+            trending
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error
+        })
+    }
+}
+
+export const deleteListing = async (req, res) => {
+    try {
+        const { listingId } = req.params
+        const listing = await prisma.listing.findUnique({
+            where: { id: listingId },
+        });
+
+        if (!listing) {
+            return res.status(404).json({ error: "Listing not found" });
+        }
+        await prisma.listing.delete({
+            where: {
+                id: listingId
+            }
+        })
+        res.status(200).json({
+            message: "Listing deleted successfully"
+        })
+    } catch (error) {
+        console.log(error);
+        if (error.code === "P2003") {
+            return res.status(501).json({
+                message: "Listing is already booked"
+            })
+        }
+        res.status(500).json({
+            message: 'Failed to delete listing',
+            error
+        });
+    }
 }
