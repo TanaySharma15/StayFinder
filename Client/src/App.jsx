@@ -11,6 +11,7 @@ import ProfilePage from "./pages/Profile";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import HostPage from "./pages/Host";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
   return (
@@ -27,7 +28,7 @@ function App() {
             <Route path="/result" element={<SearchPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/host" element={<HostPage />} />
-            <Route path="/admin" element={<AdminPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -45,6 +43,19 @@ import {
 } from "recharts";
 import { apiFetch } from "@/api";
 import { useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { DialogDescription } from "@radix-ui/react-dialog";
+import { toast } from "react-toastify";
 
 // Mock data for bookings
 const bookingsData = [
@@ -118,6 +129,8 @@ export default function AdminPage() {
   const [userData, setUserData] = useState([{}]);
   const [listingData, setListingData] = useState([{}]);
   const [bookingData, setBookingData] = useState([{}]);
+  const [selectedUser, setSelectedUser] = useState(null);
+
   useEffect(() => {
     const getStats = async () => {
       const res = await apiFetch("/admin/dashboard", {
@@ -256,8 +269,47 @@ export default function AdminPage() {
       bookingFilter === "all" || booking.status === bookingFilter;
     return matchesSearch && matchesFilter;
   });
-  const getUserProfile = (userId) => {
-    console.log(userId);
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [banData, setBanData] = useState({
+    userId: null,
+    reason: "",
+    until: "",
+  });
+
+  const openBanDialog = (user) => {
+    setBanData({ userId: user.id, reason: "", until: "" });
+    setSelectedUser(user);
+    setIsDialogOpen(true);
+  };
+
+  const handleBanSubmit = async () => {
+    if (!selectedUser) return;
+
+    console.log("Ban Data:", banData);
+    const res = await apiFetch(`/admin/ban/${selectedUser.id}`, {
+      method: "POST",
+      body: banData,
+    });
+    console.log(res);
+    setUserData((prev) =>
+      prev.map((u) => (u.id === selectedUser.id ? { ...u, isBan: true } : u))
+    );
+
+    setIsDialogOpen(false);
+    toast.success("User banned");
+  };
+  const unbanUser = async (user) => {
+    const res = await apiFetch(`/admin/unban/${user.id}`, {
+      method: "POST",
+    });
+    setUserData((prev) =>
+      prev.map((u) => {
+        return u.id === user.id ? { ...u, isBan: false } : u;
+      })
+    );
+    toast.success("User unbanned ");
+    // console.log(res);
   };
   return (
     <div className="min-h-screen bg-gray-50">
@@ -511,23 +563,28 @@ export default function AdminPage() {
                                   align="end"
                                   className="w-48"
                                 >
-                                  <DropdownMenuItem
-                                    onClick={() => getUserProfile(user.id)}
-                                  >
+                                  {/* <DropdownMenuItem>
                                     <Eye className="w-4 h-4 mr-2" />
                                     View Profile
-                                  </DropdownMenuItem>
+                                  </DropdownMenuItem> */}
                                   {user.isBan === false ? (
-                                    <DropdownMenuItem className="text-red-600">
+                                    <DropdownMenuItem
+                                      className="text-red-600"
+                                      onClick={() => openBanDialog(user)}
+                                    >
                                       <Ban className="w-4 h-4 mr-2" />
                                       Ban User
                                     </DropdownMenuItem>
                                   ) : (
-                                    <DropdownMenuItem className="text-green-600">
+                                    <DropdownMenuItem
+                                      className="text-green-600"
+                                      onClick={() => unbanUser(user)}
+                                    >
                                       <UserCheck className="w-4 h-4 mr-2" />
                                       Unban User
                                     </DropdownMenuItem>
                                   )}
+
                                   <DropdownMenuItem className="text-red-600">
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Delete User
@@ -537,6 +594,56 @@ export default function AdminPage() {
                             </TableCell>
                           </TableRow>
                         ))}
+                      <Dialog
+                        open={isDialogOpen}
+                        onOpenChange={setIsDialogOpen}
+                      >
+                        <DialogContent aria-describedby="">
+                          <DialogHeader>
+                            <DialogTitle>Ban User</DialogTitle>
+                            <DialogDescription>
+                              {" "}
+                              Please provide a reason and ban duration for this
+                              user.
+                            </DialogDescription>
+                          </DialogHeader>
+
+                          <div className="space-y-4">
+                            <Textarea
+                              placeholder="Reason for banning"
+                              value={banData.reason}
+                              onChange={(e) =>
+                                setBanData((prev) => ({
+                                  ...prev,
+                                  reason: e.target.value,
+                                }))
+                              }
+                            />
+                            <Input
+                              type="date"
+                              value={banData.until}
+                              onChange={(e) =>
+                                setBanData((prev) => ({
+                                  ...prev,
+                                  until: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <DialogFooter>
+                            <Button
+                              variant="secondary"
+                              onClick={() => setIsDialogOpen(false)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button onClick={handleBanSubmit}>
+                              Confirm Ban
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     </TableBody>
                   </Table>
                 </div>

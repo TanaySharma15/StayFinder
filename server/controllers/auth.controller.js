@@ -66,11 +66,21 @@ export const login = async (req, res) => {
     }
 };
 
-export const logout = (req, res) => {
-    res.clearCookie("token", {
-        httpOnly: true,
-        sameSite: "Strict",
-        secure: process.env.NODE_ENV === "production"
-    });
-    res.status(200).json({ message: "Logged out" });
+export const logoutUser = async (req, res) => {
+    try {
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+        });
+
+        return res.status(200).json({
+            message: "Logout successful",
+        });
+    } catch (error) {
+        console.error("Logout error:", error);
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
 };

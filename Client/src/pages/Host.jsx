@@ -14,6 +14,8 @@ import {
   Tv,
   Wind,
 } from "lucide-react";
+import { apiFetch } from "@/api";
+import { toast } from "react-toastify";
 
 const amenityOptions = [
   { id: "wifi", label: "Wifi", icon: Wifi },
@@ -34,11 +36,22 @@ export default function HostPage() {
     country: "",
     propertyType: "",
     guests: 1,
-    amenities: [],
-    images: [],
+    // amenities: [],
+    // images: [],
   });
 
-  const totalSteps = 6;
+  const handleSubmit = async () => {
+    const res = await apiFetch("/listing/create", {
+      method: "POST",
+      body: listingData,
+    });
+    console.log(res);
+    if (res.message === "Listing created") {
+      toast.success("Booking created  ");
+    }
+  };
+
+  const totalSteps = 4;
   const progress = (currentStep / totalSteps) * 100;
 
   const handleAmenityToggle = (amenityId) => {
@@ -256,74 +269,11 @@ export default function HostPage() {
             )}
 
             {/* Step 4: Amenities */}
-            {currentStep === 4 && (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                    Tell guests what your place has to offer
-                  </h2>
-                  <p className="text-gray-600">
-                    You can add more amenities after you publish your listing
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                  {amenityOptions.map((amenity) => {
-                    const Icon = amenity.icon;
-                    const isSelected = listingData.amenities.includes(
-                      amenity.id
-                    );
-
-                    return (
-                      <button
-                        key={amenity.id}
-                        onClick={() => handleAmenityToggle(amenity.id)}
-                        className={`p-4 border-2 rounded-xl text-left transition-colors ${
-                          isSelected
-                            ? "border-rose-500 bg-rose-50"
-                            : "border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        <Icon className="w-6 h-6 mb-2 text-gray-600" />
-                        <span className="font-medium text-gray-900">
-                          {amenity.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Step 5: Photos */}
-            {currentStep === 5 && (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                    Add some photos of your place
-                  </h2>
-                  <p className="text-gray-600">
-                    You'll need at least 5 photos to get started
-                  </p>
-                </div>
-
-                <div className="max-w-2xl mx-auto">
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-gray-400 transition-colors cursor-pointer">
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      Drag your photos here
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Choose at least 5 photos
-                    </p>
-                    <Button variant="outline">Upload from your device</Button>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Step 6: Title, Description & Price */}
-            {currentStep === 6 && (
+            {currentStep === 4 && (
               <div className="space-y-6">
                 <div className="text-center">
                   <h2 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -411,12 +361,7 @@ export default function HostPage() {
               Next
             </Button>
           ) : (
-            <Button
-              className="btn-primary"
-              onClick={() => {
-                console.log(listingData);
-              }}
-            >
+            <Button className="btn-primary" onClick={handleSubmit}>
               Publish Listing
             </Button>
           )}

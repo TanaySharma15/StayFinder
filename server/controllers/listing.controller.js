@@ -1,4 +1,3 @@
-import cloudinary from "../lib/cloudinary.js"
 import prisma from "../lib/prisma.js"
 
 export const getListingWithFilter = async (req, res) => {
@@ -117,46 +116,29 @@ export const getListingDetails = async (req, res) => {
 export const createListing = async (req, res) => {
     try {
         const {
-            hostId,
             title,
             description,
             price,
-            address,
             city,
+            state,
             country,
-            latitude,
-            longitude
+            guests
         } = req.body;
 
-        const imageUrls = await Promise.all(
-            req.files.map(file => {
-                return new Promise((resolve, reject) => {
-                    const stream = cloudinary.uploader.upload_stream(
-                        {
-                            folder: "stayFinder"
-                        },
-                        (err, result) => {
-                            if (err) return reject(err);
-                            resolve(result.secure_url);
-                        }
-                    );
-                    stream.end(file.buffer);
-                });
-            })
-        );
+
 
         const listing = await prisma.listing.create({
             data: {
                 title,
                 description,
                 price: Number(price),
-                address,
                 city,
+                state,
                 country,
-                latitude: latitude ? parseFloat(latitude) : null,
-                longitude: longitude ? parseFloat(longitude) : null,
-                imageUrls,
-                hostId
+                guests,
+                // latitude: latitude ? parseFloat(latitude) : null,
+                // longitude: longitude ? parseFloat(longitude) : null,
+                hostId: req.user.id
             }
         });
 
@@ -165,6 +147,8 @@ export const createListing = async (req, res) => {
             data: listing
         });
     } catch (error) {
+        console.log(error);
+
         res.status(500).json({
             message: 'Failed to create listing',
             error
