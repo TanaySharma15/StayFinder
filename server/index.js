@@ -37,12 +37,12 @@ import bookingRouter from "./routes/booking.route.js"
 import favoriteRouter from "./routes/favorite.route.js"
 import adminRouter from "./routes/admin.route.js"
 
-app.use("/api/auth", authRouter)
-app.use("/api/user", userRouter)
-app.use("/api/listing", listingRouter)
-app.use("/api/bookings", bookingRouter)
-app.use("/api/favorites", favoriteRouter)
-app.use("/api/admin", adminRouter)
+app.use("/auth", authRouter)
+app.use("/user", userRouter)
+app.use("/listing", listingRouter)
+app.use("/bookings", bookingRouter)
+app.use("/favorites", favoriteRouter)
+app.use("/admin", adminRouter)
 
 app.get('/', (req, res) => {
     res.send('Airbnb backend API is running');
