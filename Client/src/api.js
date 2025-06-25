@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000/api";
+const API_URL = "https://stayfinder-d4mr.onrender.com";
 
 export async function apiFetch(path, options) {
     const res = await fetch(`${API_URL}${path}`, {
